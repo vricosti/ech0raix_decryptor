@@ -1,3 +1,16 @@
+////////////////////////////////////////////////////////////////////////////////
+// Copyright 2022 Vince Ricosti
+// This code is a free and virus free implementation of the ech0raix decoder
+// if you have been infected by ech0raix (aka qnap encrypt) and you have paid
+// you should have received a zip file containing some binaries for different
+// platforms.
+// Personnaly even if I have checked that the binary was virus free I prefer to
+// execute a well-known code and I advise you to do the same.
+// Personal message to the guy who has encrypted my data:
+// Karma will come back very hard on you and I wish you will die from a
+// rectum's cancer
+////////////////////////////////////////////////////////////////////////////////
+
 package main
 
 import (
@@ -15,6 +28,14 @@ import (
 )
 
 //const key = "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func UNUSED(x ...interface{}) {}
 
 func decryptFile(key string, srcpath string) {
 	fmt.Printf("UnLock: %s\n", srcpath)
@@ -94,142 +115,11 @@ func main() {
 			file_ext := filepath.Ext(path)
 			if file_ext == ".encrypt" {
 				file_len := info.Size()
-				if file_len > 16 {
+				if file_len > 16 && file_len < 512000000 {
 					decryptFile(key, path)
 				}
 			}
 		}
 		return nil
 	})
-
-	//return
-
-	// //https://levelup.gitconnected.com/a-short-guide-to-encryption-using-go-da97c928259f
-	// infile, err := os.Open("/home/vince/Dev/ech0raix/Free.jpg.encrypt")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer infile.Close()
-
-	// // The key should be 16 bytes (AES-128), 24 bytes (AES-192) or
-	// // 32 bytes (AES-256)
-	// block, err := aes.NewCipher([]byte(key))
-	// if err != nil {
-	// 	log.Panic(err)
-	// }
-
-	// // Never use more than 2^32 random nonces with a given key
-	// // because of the risk of repeat.
-	// fi, err := infile.Stat()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// //43 5a
-	// iv := make([]byte, aes.BlockSize)
-	// infile.Read(iv)
-	// infile.Seek(0, 0)
-	// msgLen := fi.Size() - int64(len(iv))
-	// log.Printf("Input file is %d bytes", msgLen)
-	// // _, err = infile.ReadAt(iv, msgLen)
-	// // if err != nil {
-	// // 	log.Fatal(err)
-	// // }
-
-	// outfile, err := os.OpenFile("/home/vince/Dev/ech0raix/Free.jpg", os.O_RDWR|os.O_CREATE, 0777)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer outfile.Close()
-
-	// // The buffer size must be multiple of 16 bytes
-	// buf := make([]byte, 16)
-	// stream := cipher.NewCFBDecrypter(block, iv)
-	// for {
-	// 	n, err := infile.Read(buf)
-	// 	if n > 0 {
-	// 		// // The last bytes are the IV, don't belong the original message
-	// 		// if n > int(msgLen) {
-	// 		// 	n = int(msgLen)
-	// 		// }
-	// 		// msgLen -= int64(n)
-
-	// 		stream.XORKeyStream(buf, buf[:n])
-	// 		// Write into file
-	// 		outfile.Write(buf[:n])
-	// 	}
-
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
-
-	// 	if err != nil {
-	// 		log.Printf("Read %d bytes: %v", n, err)
-	// 		break
-	// 	}
-	// }
 }
-
-// func main() {
-// 	//decryptFile("/home/vince/Dev/ech0raix/Free.jpg.encrypt")
-
-// 	infile, err := os.Open("/home/vince/Dev/ech0raix/Free.jpg.encrypt")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer infile.Close()
-
-// 	// The key should be 16 bytes (AES-128), 24 bytes (AES-192) or
-// 	// 32 bytes (AES-256)
-// 	key := "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
-// 	block, err := aes.NewCipher([]byte(key))
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-
-// 	// Never use more than 2^32 random nonces with a given key
-// 	// because of the risk of repeat.
-// 	fi, err := infile.Stat()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	iv := make([]byte, block.BlockSize())
-// 	msgLen := fi.Size() - int64(len(iv))
-// 	_, err = infile.ReadAt(iv, msgLen)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	outfile, err := os.OpenFile("/home/vince/Dev/ech0raix/Free.jpg", os.O_RDWR|os.O_CREATE, 0777)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer outfile.Close()
-
-// 	// The buffer size must be multiple of 16 bytes
-// 	buf := make([]byte, 1024)
-// 	stream := cipher.NewCFBDecrypter(block, iv)
-// 	for {
-// 		n, err := infile.Read(buf)
-// 		if n > 0 {
-// 			// The last bytes are the IV, don't belong the original message
-// 			if n > int(msgLen) {
-// 				n = int(msgLen)
-// 			}
-// 			msgLen -= int64(n)
-// 			stream.XORKeyStream(buf, buf[:n])
-// 			// Write into file
-// 			outfile.Write(buf[:n])
-// 		}
-
-// 		if err == io.EOF {
-// 			break
-// 		}
-
-// 		if err != nil {
-// 			log.Printf("Read %d bytes: %v", n, err)
-// 			break
-// 		}
-// 	}
-// }
