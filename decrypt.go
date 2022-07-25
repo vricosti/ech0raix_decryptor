@@ -14,6 +14,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"flag"
@@ -26,7 +27,10 @@ import (
 )
 
 //const key = "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
-const default_buffer_size = 65536
+
+const FILEBUFFERSIZE = 10 * 1024 * 1024
+
+var period = 100 * 1024 * 1024 // Default period
 
 func UNUSED(x ...interface{}) {}
 
@@ -51,31 +55,41 @@ func decryptFile(inputName string, outputName string, key []byte) {
 	check(err)
 	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
 
-	// get the size of the ciphered data
+	// size of ciphered data
 	fi, _ := inFile.Stat()
 	check(err)
-	data_len := int(fi.Size()) - aes.BlockSize
-	fmt.Printf("crypted file: %d, datalen = %d (file - 16)", fi.Size(), data_len)
+	datalen := fi.Size() - 14
+	fmt.Printf("crypted file: %d, datalen = %d (filesize - 14)", fi.Size(), datalen)
 
-	// read the iv from input file and move the seek pointer just after
-	iv := make([]byte, aes.BlockSize)
+	// read first 16 bytes that normally corresponds to iv
+	iv := make([]byte, 16)
 	_, err = io.ReadFull(inFile, iv[:])
 	check(err)
-	_, _ = inFile.Seek(aes.BlockSize, 0)
 
-	// Set buffer size
-	buffer_size := default_buffer_size
+	// check if at offset 10*1024*1024 + 16 we have the same iv
+	_, err = inFile.Seek(10*1024*1024+16, 0)
+	if err == nil {
+		buf := make([]byte, 16)
+		bytesread, _ := io.ReadFull(inFile, buf)
+		if bytesread == 16 && bytes.Equal(buf, iv) {
+			period = 10*1024*1024 + 16
+		}
+	}
+
+	// set file pointer of file just after iv
+	_, _ = inFile.Seek(16, 0)
+	datalen = datalen - 16
 
 	// decode ciphered data
 	stream := cipher.NewCFBDecrypter(block, iv)
-	input_buffer := make([]byte, buffer_size)
-	decrypted_bytes := make([]byte, buffer_size)
+	input_buffer := make([]byte, FILEBUFFERSIZE)
+	decrypted_bytes := make([]byte, FILEBUFFERSIZE)
 	read_len, total_len := 0, 0
 	for ok := true; ok; ok = (read_len > 0) {
 		read_len, _ = inFile.Read(input_buffer)
 		total_len += read_len
 
-		if read_len == buffer_size {
+		if read_len == FILEBUFFERSIZE {
 			stream.XORKeyStream(decrypted_bytes, input_buffer)
 			_, _ = outFile.Write(decrypted_bytes)
 		} else if read_len > 0 {
@@ -91,40 +105,40 @@ func decryptFile(inputName string, outputName string, key []byte) {
 // But it doesn't work very well either because when I decrypt tests/Windows7_Home.vmx
 // I also get the same garbage at then end
 // However the code is simpler.
-func decryptFile2(inputName string, outputName string, key []byte) {
-	var cfb cipher.Stream
-	var err error
-	iv := make([]byte, aes.BlockSize)
-	inFile, err := os.Open(inputName)
-	if err != nil {
-		log.Fatal("open input file failed")
-	}
-	defer func(inFile *os.File) { _ = inFile.Close() }(inFile)
-	outFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
-	if err != nil {
-		log.Fatal("open output file failed")
-	}
-	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		log.Fatal(err)
-	}
+// func decryptFile2(inputName string, outputName string, key []byte) {
+// 	var cfb cipher.Stream
+// 	var err error
+// 	iv := make([]byte, aes.BlockSize)
+// 	inFile, err := os.Open(inputName)
+// 	if err != nil {
+// 		log.Fatal("open input file failed")
+// 	}
+// 	defer func(inFile *os.File) { _ = inFile.Close() }(inFile)
+// 	outFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+// 	if err != nil {
+// 		log.Fatal("open output file failed")
+// 	}
+// 	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
+// 	block, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	_, err = io.ReadFull(inFile, iv[:])
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, _ = inFile.Seek(aes.BlockSize, 0)
-	cfb = cipher.NewCFBDecrypter(block, iv)
+// 	_, err = io.ReadFull(inFile, iv[:])
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	_, _ = inFile.Seek(aes.BlockSize, 0)
+// 	cfb = cipher.NewCFBDecrypter(block, iv)
 
-	s := cipher.StreamReader{
-		S: cfb,
-		R: inFile,
-	}
-	if _, err = io.Copy(outFile, s); err != nil {
-		log.Println(err)
-	}
-}
+// 	s := cipher.StreamReader{
+// 		S: cfb,
+// 		R: inFile,
+// 	}
+// 	if _, err = io.Copy(outFile, s); err != nil {
+// 		log.Println(err)
+// 	}
+// }
 
 func main() {
 

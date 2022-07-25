@@ -1,0 +1,42 @@
+Changelog for ECh0raix Decoder
+--------------------------------
+
+**********************
+* ECh0raix Decoder *
+**********************
+=========
+= 1.0.6 =
+=========
+- Improved handling of paths longer than 260 characters
+
+=========
+= 1.0.5 =
+=========
+- Improved repair algorithm for encrypted files bigger than 20MB (unecrypted size bigger than 10MB)
+
+=========
+= 1.0.4 =
+=========
+- Added support to use file as a source of decryption keys (Check 4.3. in readme)
+
+=========
+= 1.0.3 =
+=========
+- Speed up bruteforce on CPUs with AES hardware support and SSSE3
+- Added exhaustive search (just for fun)
+
+=========
+= 1.0.2 =
+=========
+- Fixed a bug that prevented to load correct found key from brute forcer
+
+=========
+= 1.0.1 =
+=========
+- Fixed a bug that prevented to decrypt files bigger than 100MB
+- Added support for obtaining the key from the ransom note if RSA private key is known
+
+=========
+= 1.0.0 =
+=========
+- First public release
