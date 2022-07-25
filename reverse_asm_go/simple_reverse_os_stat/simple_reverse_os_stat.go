@@ -13,7 +13,8 @@ func main() {
 	//.text:000000000048A05F mov     ebx, 0Bh
 	//.text:000000000048A064 call    os_Stat 			-- os* pFileInfo = os_Stat(rax, ebx)
 
-	path := "/home/vince"
+	path, _ := os.UserHomeDir()
+	//path := "/home/vince"
 	fileInfo, _ := os.Stat(path)
 
 	//.text:000000000048A069 mov     rcx, [rax+18h]		-- rcx = &pFileInfo.IsDir
@@ -21,11 +22,16 @@ func main() {
 	//.text:000000000048A070 call    rcx				-- rax = *pFileInfo.IsDir()
 	isdir := fileInfo.IsDir()
 
+	// name := fileInfo.Name()
+	// fmt.Printf("name = %s", name)
+	// size := fileInfo.Size()
+	// fmt.Printf("size = %d", size)
+
 	//.text:000000000048A072 test    al, al				-- if rax == 0 goto NOT_A_DIR
 	if isdir {
 		fmt.Println("path is a dir")
 	} else {
-	NOT_A_DIR:
+		//NOT_A_DIR:
 		fmt.Println("path is not a dir")
 	}
 
