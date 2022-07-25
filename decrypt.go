@@ -27,19 +27,12 @@ import (
 //const key = "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
 const default_buffer_size = 65536
 
+func UNUSED(x ...interface{}) {}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func UNUSED(x ...interface{}) {}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 func decryptFile(key string, srcpath string) {
@@ -62,9 +55,10 @@ func decryptFile(key string, srcpath string) {
 	check(err)
 
 	// get the size of the ciphered data
-	//fi, _ := input_file.Stat()
-	//check(err)
-	//data_len := int(fi.Size()) - aes.BlockSize
+	fi, _ := input_file.Stat()
+	check(err)
+	data_len := int(fi.Size()) - aes.BlockSize
+	fmt.Printf("crypted file: %d, datalen = %d (file - 16)", fi.Size(), data_len)
 
 	// read the iv from input file
 	iv := make([]byte, aes.BlockSize)
@@ -89,7 +83,7 @@ func decryptFile(key string, srcpath string) {
 			_, _ = output_file.Write(decrypted_bytes)
 		} else if read_len > 0 {
 			stream.XORKeyStream(decrypted_bytes, input_buffer)
-			tmp_buffer := decrypted_bytes[:read_len]
+			tmp_buffer := decrypted_bytes[0:read_len]
 			_, _ = output_file.Write(tmp_buffer)
 			//fmt.Println("What should I do ?????")
 		}

@@ -4,13 +4,21 @@
     // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "Launch Package",
+            "name": "Launch decrypt",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "decrypt.go",
-            "args": ["-k", "4STDs9cmUlkiujXuLkdTouoqOIfER4TE", "-s", "../.."]
+            "args": ["-k", "4STDs9cmUlkiujXuLkdTouoqOIfER4TE", "-s", "tests"]
+        },
+        {
+            "name": "Launch simple_reverse_os_stat",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "reverse_asm_go/simple_reverse_os_stat/simple_reverse_os_stat.go",
         },
         {
             "name": "Launch Python",
