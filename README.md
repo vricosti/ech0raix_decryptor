@@ -1,5 +1,11 @@
 # ech0raix_decryptor
 
+**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES 
+**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES   
+**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
+**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
+**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
+
 If you are here it means that your NAS has been infected by ech0raix (aka qnap encrypt) and that you 
 are either :
 
