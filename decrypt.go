@@ -35,14 +35,6 @@ func check(e error) {
 
 func UNUSED(x ...interface{}) {}
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func UNUSED(x ...interface{}) {}
-
 func decryptFile(key string, srcpath string) {
 	fmt.Printf("UnLock: %s\n", srcpath)
 
@@ -124,7 +116,7 @@ func main() {
 			file_ext := filepath.Ext(path)
 			if file_ext == ".encrypt" {
 				file_len := info.Size()
-				if file_len > 16 && file_len < 512000000 {
+				if file_len > 16 {
 					decryptFile(key, path)
 				}
 			}
