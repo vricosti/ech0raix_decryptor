@@ -16,7 +16,9 @@ are either :
   So welcome on this page and please follow the instruction:
   
   **Step 1)** You first need to extract the key embedded inside the "official" (it's hard to use this word) decryptor_binary.  
-              To do so you can download Free version of IDA Disassembler and search inside main_ to find the key as shown below:
+              To do so you can download Free version of IDA Disassembler and search inside main_main to find the key as shown below:                 
+              ![Alt text](https://github.com/vricosti/ech0raix_decryptor/blob/main/doc/ida_extract_key.png?sanitize=true)
+
 
 
 
