@@ -18,6 +18,7 @@ import (
 	"crypto/cipher"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,68 +30,100 @@ const default_buffer_size = 65536
 
 func UNUSED(x ...interface{}) {}
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
-func decryptFile(key string, srcpath string) {
-	fmt.Printf("UnLock: %s\n", srcpath)
-
-	ext := filepath.Ext(srcpath)
-	if ext != ".encrypt" {
-		log.Fatal("not a ech0raix encrypted file - must end with .encrypt")
-	}
-	dstpath := strings.TrimSuffix(srcpath, ext)
+func decryptFile(inputName string, outputName string, key []byte) {
+	fmt.Printf("Decrypting: %s\n", inputName)
 
 	// Create the cipher object and decrypt the data
 	block, err := aes.NewCipher([]byte(key))
 	check(err)
 
 	// Open the input and output files
-	input_file, err := os.Open(srcpath)
+	inFile, err := os.Open(inputName)
 	check(err)
-	output_file, err := os.Create(dstpath)
+	defer func(inFile *os.File) { _ = inFile.Close() }(inFile)
+	outFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	check(err)
+	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
 
 	// get the size of the ciphered data
-	fi, _ := input_file.Stat()
+	fi, _ := inFile.Stat()
 	check(err)
 	data_len := int(fi.Size()) - aes.BlockSize
 	fmt.Printf("crypted file: %d, datalen = %d (file - 16)", fi.Size(), data_len)
 
-	// read the iv from input file
+	// read the iv from input file and move the seek pointer just after
 	iv := make([]byte, aes.BlockSize)
-	n1, err := input_file.Read(iv)
-	UNUSED(n1)
+	_, err = io.ReadFull(inFile, iv[:])
 	check(err)
+	_, _ = inFile.Seek(aes.BlockSize, 0)
 
 	// Set buffer size
 	buffer_size := default_buffer_size
 
-	// read b
+	// decode ciphered data
 	stream := cipher.NewCFBDecrypter(block, iv)
 	input_buffer := make([]byte, buffer_size)
 	decrypted_bytes := make([]byte, buffer_size)
 	read_len, total_len := 0, 0
 	for ok := true; ok; ok = (read_len > 0) {
-		read_len, _ = input_file.Read(input_buffer)
+		read_len, _ = inFile.Read(input_buffer)
 		total_len += read_len
 
 		if read_len == buffer_size {
 			stream.XORKeyStream(decrypted_bytes, input_buffer)
-			_, _ = output_file.Write(decrypted_bytes)
+			_, _ = outFile.Write(decrypted_bytes)
 		} else if read_len > 0 {
 			stream.XORKeyStream(decrypted_bytes, input_buffer)
 			tmp_buffer := decrypted_bytes[0:read_len]
-			_, _ = output_file.Write(tmp_buffer)
+			_, _ = outFile.Write(tmp_buffer)
 			//fmt.Println("What should I do ?????")
 		}
-
 	}
-	input_file.Close()
-	output_file.Close()
+}
+
+// This method is from https://github.com/Akegarasu/file-encrypter/blob/main/main.go
+// But it doesn't work very well either because when I decrypt tests/Windows7_Home.vmx
+// I also get the same garbage at then end
+// However the code is simpler.
+func decryptFile2(inputName string, outputName string, key []byte) {
+	var cfb cipher.Stream
+	var err error
+	iv := make([]byte, aes.BlockSize)
+	inFile, err := os.Open(inputName)
+	if err != nil {
+		log.Fatal("open input file failed")
+	}
+	defer func(inFile *os.File) { _ = inFile.Close() }(inFile)
+	outFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	if err != nil {
+		log.Fatal("open output file failed")
+	}
+	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = io.ReadFull(inFile, iv[:])
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, _ = inFile.Seek(aes.BlockSize, 0)
+	cfb = cipher.NewCFBDecrypter(block, iv)
+
+	s := cipher.StreamReader{
+		S: cfb,
+		R: inFile,
+	}
+	if _, err = io.Copy(outFile, s); err != nil {
+		log.Println(err)
+	}
 }
 
 func main() {
@@ -139,7 +172,8 @@ func main() {
 			if file_ext == ".encrypt" {
 				file_len := info.Size()
 				if file_len > 16 {
-					decryptFile(key, path)
+					dstpath := strings.TrimSuffix(path, file_ext)
+					decryptFile(path, dstpath, []byte(key))
 				}
 			}
 		}
