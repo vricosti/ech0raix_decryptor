@@ -14,13 +14,10 @@
 package main
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,6 +25,15 @@ import (
 )
 
 //const key = "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
+const buffer_size = 65536
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func UNUSED(x ...interface{}) {}
 
 func check(e error) {
 	if e != nil {
@@ -44,33 +50,36 @@ func decryptFile(key string, srcpath string) {
 	if ext != ".encrypt" {
 		log.Fatal("not a ech0raix encrypted file - must end with .encrypt")
 	}
-
 	dstpath := strings.TrimSuffix(srcpath, ext)
-	content, err := ioutil.ReadFile(srcpath)
-	if err != nil {
-		panic(err.Error())
-	}
 
+	// Create the cipher object and decrypt the data
 	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
-	iv := content[:aes.BlockSize]
-	cyphertext := content[aes.BlockSize:]
-	plaintext := make([]byte, len(content)-aes.BlockSize)
+	// Open the input and output files
+	input_file, err := os.Open(srcpath)
+	check(err)
+	output_file, err := os.Create(dstpath)
+	check(err)
 
+	// read the iv from input file
+	iv := make([]byte, aes.BlockSize)
+	n1, err := input_file.Read(iv)
+	UNUSED(n1)
+	check(err)
+
+	// read b
 	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(plaintext, cyphertext)
-
-	f, err := os.Create(dstpath)
-	if err != nil {
-		panic(err.Error())
+	input_buffer := make([]byte, buffer_size)
+	decrypted_bytes := make([]byte, buffer_size)
+	buflen := 0
+	for ok := true; ok; ok = (buflen > 0) {
+		buflen, _ = input_file.Read(input_buffer)
+		stream.XORKeyStream(decrypted_bytes, input_buffer)
+		_, _ = output_file.Write(decrypted_bytes)
 	}
-	_, err = io.Copy(f, bytes.NewReader(plaintext))
-	if err != nil {
-		panic(err.Error())
-	}
+	input_file.Close()
+	output_file.Close()
 }
 
 func main() {
