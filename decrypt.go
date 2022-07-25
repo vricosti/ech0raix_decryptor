@@ -25,7 +25,7 @@ import (
 )
 
 //const key = "4STDs9cmUlkiujXuLkdTouoqOIfER4TE"
-const buffer_size = 65536
+const default_buffer_size = 65536
 
 func check(e error) {
 	if e != nil {
@@ -34,6 +34,13 @@ func check(e error) {
 }
 
 func UNUSED(x ...interface{}) {}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 func decryptFile(key string, srcpath string) {
 	fmt.Printf("UnLock: %s\n", srcpath)
@@ -54,21 +61,39 @@ func decryptFile(key string, srcpath string) {
 	output_file, err := os.Create(dstpath)
 	check(err)
 
+	// get the size of the ciphered data
+	//fi, _ := input_file.Stat()
+	//check(err)
+	//data_len := int(fi.Size()) - aes.BlockSize
+
 	// read the iv from input file
 	iv := make([]byte, aes.BlockSize)
 	n1, err := input_file.Read(iv)
 	UNUSED(n1)
 	check(err)
 
+	// Set buffer size
+	buffer_size := default_buffer_size
+
 	// read b
 	stream := cipher.NewCFBDecrypter(block, iv)
 	input_buffer := make([]byte, buffer_size)
 	decrypted_bytes := make([]byte, buffer_size)
-	buflen := 0
-	for ok := true; ok; ok = (buflen > 0) {
-		buflen, _ = input_file.Read(input_buffer)
-		stream.XORKeyStream(decrypted_bytes, input_buffer)
-		_, _ = output_file.Write(decrypted_bytes)
+	read_len, total_len := 0, 0
+	for ok := true; ok; ok = (read_len > 0) {
+		read_len, _ = input_file.Read(input_buffer)
+		total_len += read_len
+
+		if read_len == buffer_size {
+			stream.XORKeyStream(decrypted_bytes, input_buffer)
+			_, _ = output_file.Write(decrypted_bytes)
+		} else if read_len > 0 {
+			stream.XORKeyStream(decrypted_bytes, input_buffer)
+			tmp_buffer := decrypted_bytes[:read_len]
+			_, _ = output_file.Write(tmp_buffer)
+			//fmt.Println("What should I do ?????")
+		}
+
 	}
 	input_file.Close()
 	output_file.Close()
@@ -95,10 +120,13 @@ func main() {
 	}
 
 	if len(key) != 32 {
-		fmt.Println("Error the key should be 32 bytes long")
+		fmt.Println("Error: the key should be 32 bytes long")
+	}
+	if len(start_dir) == 0 {
+		fmt.Println("Error: invalid empty path")
 	}
 
-	if strings.HasPrefix(start_dir, ".") {
+	if start_dir[0:1] != "/" {
 		tmp_path, _ := filepath.Abs(start_dir)
 		flag.Set("s", tmp_path)
 	}
