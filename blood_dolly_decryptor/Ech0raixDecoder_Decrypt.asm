@@ -258,35 +258,35 @@ _Decrypt_readIV:
         cmp bytesread,16
         jnz _Decrypt_read_err
         
-        sub size_low,16
-        sbb size_high,0
-        mov block_100,16
+        sub size_low,16                         ; size_low = size_low - 16
+        sbb size_high,0                         ; size_high = size_high - 0 - C
+        mov block_100,16                        ; block_100 = 16
         
 align 16        
 _Decrypt_loop:
 ;;DEBUG
 __DEBUG lpstr("FileSizeLow: $d, FileSizeHigh: $d"),size_high,size_low
 ;;/DEBUG  
-        xor eax,eax
-        mov ebx,FILEBUFFERSIZE
-        cmp size_high,eax
-        ja @F
-        mov eax,size_low
-        test eax,eax
-        jbe _Decrypt_loop_end
-        cmp ebx,eax
-        cmova ebx,eax
+        xor eax,eax                             ; eax = 0
+        mov ebx,FILEBUFFERSIZE                  ; ebx = FILEBUFFERSIZE
+        cmp size_high,eax                       ; test = cmp(size_high, 0)
+        ja @F                                   ; if test > 0 goto @F
+        mov eax,size_low                        ; eax = size_low
+        test eax,eax                            ; if size_low == 0
+        jbe _Decrypt_loop_end                   ; goto _Decrypt_loop_end
+        cmp ebx,eax                             ; test = compare(ebx, size_low)
+        cmova ebx,eax                           ; if (ebx > size_low) { ebx = size_low; }
 @@:    
        ;align read buffer if needed
-        mov eax,block_100
-        add eax,ebx
-        cmp eax,period
-        jbe _Decrypt_read
+        mov eax,block_100                       ; eax = 16
+        add eax,ebx                             ; eax = 16 + ebx 
+        cmp eax,period                          ; test = cmp(eax, period)
+        jbe _Decrypt_read                       ; if eax == period goto _Decrypt_read
        
        ;how many bytes can we read?
-        sub eax,period
-        sub eax,16
-        sub ebx,eax                 ;nbytes to period
+        sub eax,period                          ; eax = eax - period
+        sub eax,16                              ; eax = eax - 16
+        sub ebx,eax                 ;nbytes to period ie ebx = ebx - eax <=> ebx = eax - period - 16
         
 _Decrypt_read:    
        ;read data from input file

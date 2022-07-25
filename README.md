@@ -1,8 +1,4 @@
 # ech0raix_decryptor
-
-**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
-**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
-**WARNING**: WORK IN PROGRESS - DO NOT USE IT TO DECRYPT YOUR FILES  
   
 If you are here it means that your NAS has been infected by ech0raix (aka qnap encrypt) and that you 
 are either :  
@@ -19,6 +15,6 @@ are either :
               To do so you can download Free version of IDA Disassembler and search inside main_main to find the key as shown below:                 
               ![Alt text](https://github.com/vricosti/ech0raix_decryptor/blob/main/doc/ida_extract_key.png?sanitize=true)
 
-
+  **Step 2)** Try first to run the decryptor on a folder without deleting the encrypted files.  
 
 

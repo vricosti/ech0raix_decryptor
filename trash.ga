@@ -1,0 +1,39 @@
+// This method is from https://github.com/Akegarasu/file-encrypter/blob/main/main.go
+// But it doesn't work very well either because when I decrypt tests/Windows7_Home.vmx
+// I also get the same garbage at then end
+// However the code is simpler.
+
+// func decryptFile2(inputName string, outputName string, key []byte) {
+// 	var cfb cipher.Stream
+// 	var err error
+// 	iv := make([]byte, aes.BlockSize)
+// 	inFile, err := os.Open(inputName)
+// 	if err != nil {
+// 		log.Fatal("open input file failed")
+// 	}
+// 	defer func(inFile *os.File) { _ = inFile.Close() }(inFile)
+// 	outFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+// 	if err != nil {
+// 		log.Fatal("open output file failed")
+// 	}
+// 	defer func(outFile *os.File) { _ = outFile.Close() }(outFile)
+// 	block, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	_, err = io.ReadFull(inFile, iv[:])
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	_, _ = inFile.Seek(aes.BlockSize, 0)
+// 	cfb = cipher.NewCFBDecrypter(block, iv)
+
+// 	s := cipher.StreamReader{
+// 		S: cfb,
+// 		R: inFile,
+// 	}
+// 	if _, err = io.Copy(outFile, s); err != nil {
+// 		log.Println(err)
+// 	}
+// }
