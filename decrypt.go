@@ -219,6 +219,20 @@ func decryptFile(inputName string, outputName string, key []byte, deleteCiphered
 	}
 }
 
+// WORK IN PROGRESS
+func walk_bottom_up(root_dir string) {
+	file, err := os.Open(root_dir)
+	if err != nil {
+		log.Fatalf("failed opening directory: %s", err)
+	}
+	defer file.Close()
+
+	list, _ := file.Readdirnames(0) // 0 to read all files and folders
+	for _, name := range list {
+		fmt.Println(name)
+	}
+}
+
 func main() {
 
 	var key string
@@ -256,10 +270,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	walk_bottom_up(start_dir)
+
 	filepath.Walk(start_dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
+		fmt.Printf("Current path: %s\n", path)
+
 		if !info.IsDir() {
 
 			_, filename := filepath.Split(path)
